@@ -1,6 +1,6 @@
 ---
-title: Linear Regression
-author: Fachri P.S-Institut Teknologi Statistika dan Bisnis Muhammadiyah
+title: Algoritma Linear Regression dengan R
+author: Fachri Putra S - Institut Teknologi Statistika dan Bisnis Muhammadiyah
 date: "`r Sys.Date()`"
 output:
   prettydoc::html_pretty:
@@ -19,24 +19,39 @@ text-align: justify}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# R Markdown
+# Algoritma Linear Regression
+Linear Regression adalah model statistik yang menguji hubungan linear anatara dua variabel atau lebih. Variabel-variabel tersebut dikenal dengan istilah variabel terikat (dependent variable) dan variabel bebas (independent variable). Dimana:
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents [@deCarvalho2012]. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Dependent Variable adalah faktor utama yang ingin kita prediksi; target variable (numeric)
+Independent Variable adalah faktor-faktor yang kita hipotesa memiliki pengaruh terhadap target variable; predictor variable (numerical/categorical)
+Hubungan linier pada dasarnya berarti bahwa ketika satu (atau lebih) variabel independen meningkat (atau menurun), variabel dependen meningkat (atau menurun) juga.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Tahapan Algoritma Linear Regression
 
-```{r cars}
-summary(cars)
+# Eksperimen
+## Import Library
+
+Pada Learning By Building: Linear Regression kita akan menggunakan beberapa library yang memiliki fungsi masing-masing, library yang digunakan antara lain :
+```{r}
+library(dplyr)
+library(GGally)
+library(MLmetrics)
+library(performance)
+library(lmtest)
+library(car)
+library(stringr)
+
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+## Import Dataset
+Dataset yang digunakan adalah abalone.csv untuk mengimpor dataset tersebut kita akan menggunakan fungsi read.csv() dan akan disimpan ke dalam variabel abalone:
+```{r}
+abalone <- read.csv("D:/Documents/abalone.csv")
+```
+Menggunakan fungsi head() pada variabel caruntuk melihat apakah file Quikr_car.csv sudah berhasil disimpan di variabel abalone:
+```{r}
+head(abalone)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#  referensi
 
-# Referensi
