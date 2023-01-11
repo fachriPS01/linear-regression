@@ -12,7 +12,7 @@
 
 <meta name="author" content="Fachri Putra S - Institut Teknologi Statistika dan Bisnis Muhammadiyah" />
 
-<meta name="date" content="2022-12-29" />
+<meta name="date" content="2023-01-12" />
 
 <title>Algoritma Linear Regression dengan R</title>
 
@@ -160,7 +160,7 @@ code span.ot { color: #007020; }
 dengan R</h1>
 <h3 class="author">Fachri Putra S - Institut Teknologi Statistika dan
 Bisnis Muhammadiyah</h3>
-<h3 class="date">2022-12-29</h3>
+<h3 class="date">2023-01-12</h3>
 </div><!-- /.header-title-wrap -->
 </header>
 
@@ -255,9 +255,196 @@ Quikr_car.csv sudah berhasil disimpan di variabel abalone:</p>
 ## 5        0.055     7
 ## 6        0.120     8</code></pre>
 </div>
+<div id="exploratory-data-analysis" class="section level2">
+<h2>Exploratory Data Analysis</h2>
+<p>Exploratory Data Analysis Data abalone merupakan data hasil
+observarsi pengukuran fisik dari abalone. Untuk mengetahui jumlah baris
+dan kolom kita akan menggunakan fungsi dim():</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(abalone)</span></code></pre></div>
+<pre><code>## [1] 4177    9</code></pre>
+<p>Data abalone memiliki 4177 baris dan 9 kolom Selanjutnya kita akan
+melakukan pengecekan missing values kita dapat menggunakan kombinasi
+fungsi colSums() dan is.na()</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(abalone))</span></code></pre></div>
+<pre><code>##            Sex         Length       Diameter         Height   Whole.weight 
+##              0              0              0              0              0 
+## Shucked.weight Viscera.weight   Shell.weight          Rings 
+##              0              0              0              0</code></pre>
 </div>
-<div id="referensi" class="section level1">
-<h1>referensi</h1>
+<div id="cross-validation" class="section level2">
+<h2>Cross-Validation</h2>
+<p>Kita akan menggunakan fungsi RNGkind() dan set.seed() untuk
+menghasilkan kombinasi angka random yang akan mengontrol saat
+dilakukannya splitting data.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">RNGkind</span>(<span class="at">sample.kind =</span> <span class="st">&#39;Rounding&#39;</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">666</span>)</span></code></pre></div>
+<p>Selanjutnya kita akan membagi data kita dengan ratio 80:20, fungsi
+yang digunakan adalah sample() yang akan di assign ke variabel index.
+Nantinya variabel index akan digunakan untuk subsetting pada data
+abalone</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>index <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">nrow</span>(abalone), <span class="at">size =</span> <span class="fu">nrow</span>(abalone)<span class="sc">*</span><span class="fl">0.8</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>abalone_train <span class="ot">&lt;-</span> abalone[index,]</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>abalone_test <span class="ot">&lt;-</span> abalone[<span class="sc">-</span>index,]</span></code></pre></div>
+</div>
+<div id="create-model" class="section level2">
+<h2>Create model</h2>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>model_abalone_all <span class="ot">&lt;-</span> <span class="fu">lm</span>(Rings <span class="sc">~</span> ., abalone_train)</span></code></pre></div>
+<p>Salah satu metric untuk melihat performa atau evaluasi dari suatu
+model multiple linear regression menggunakan nilai adj r-squared yang
+bisa di dapatkan dari hasil fungsi summary().</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_abalone_all)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## lm(formula = Rings ~ ., data = abalone_train)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -10.0777  -1.3127  -0.3669   0.8767  11.5993 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)      3.85046    0.32249  11.940  &lt; 2e-16 ***
+## SexI            -0.77701    0.11497  -6.758 1.64e-11 ***
+## SexM             0.07084    0.09347   0.758 0.448603    
+## Length           0.40615    2.08453   0.195 0.845528    
+## Diameter         9.92890    2.56229   3.875 0.000109 ***
+## Height          10.45725    1.60536   6.514 8.42e-11 ***
+## Whole.weight     9.45351    0.82231  11.496  &lt; 2e-16 ***
+## Shucked.weight -20.64807    0.92742 -22.264  &lt; 2e-16 ***
+## Viscera.weight -10.15860    1.46125  -6.952 4.31e-12 ***
+## Shell.weight     8.38301    1.29771   6.460 1.20e-10 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 2.199 on 3331 degrees of freedom
+## Multiple R-squared:  0.5378, Adjusted R-squared:  0.5366 
+## F-statistic: 430.7 on 9 and 3331 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Jika dilihat dari hasil summary() kita dapat melakukan beberapa
+interpretasi terhadap model tersebut :</p>
+<p>Beberapa variabel prediktor memiliki nilai slope positif yang berarti
+naiknya 1 nilai pada variabel prediktor tersebut akan menambahkan nilai
+sebesar slope variabel dari target variabel atau Rings. Variabel
+tersebut adalah SexM, Diameter, Height, Whole.weight dan Shell.weight.
+Begitupun sebaliknya variabel prediktor yang memiliki nilai slope
+negatif yang berarti naiknya 1 nilai pada variabel tersebut akan
+mengurangkan nilai sebesar slope variabel dari target variabel atau
+Rings. Variabel tersebut adalah SexI, Length, Shucked.weight dan
+Viscera.weight. Jika dilihat dari p-value terdapat variabel yang tidak
+signifikan di model tersebut yaitu SexM dan Length. model_abalone_all
+memiliki nilai adjusted R-squared sebesari 54.38%</p>
+</div>
+<div id="tuning-model-stepwise" class="section level2">
+<h2>Tuning Model (Stepwise)</h2>
+<p>fungsi yang digunakan adalah step(). Kita akan menggunakan
+model_abalone_all sebagai object, dengan parameter direction
+‘backward’.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>model_abalone_backward <span class="ot">&lt;-</span> <span class="fu">step</span>(<span class="at">object =</span> model_abalone_all,</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>                             <span class="at">direction =</span> <span class="st">&#39;backward&#39;</span>, </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>                             <span class="at">trace =</span> <span class="dv">0</span>)</span></code></pre></div>
+<p>kita dapat melihat hasil model_abalone_backward menggunakan fungsi
+summary()</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_abalone_backward)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## lm(formula = Rings ~ Sex + Diameter + Height + Whole.weight + 
+##     Shucked.weight + Viscera.weight + Shell.weight, data = abalone_train)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -10.0908  -1.3143  -0.3628   0.8805  11.5916 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)      3.87099    0.30474  12.702  &lt; 2e-16 ***
+## SexI            -0.77543    0.11467  -6.762 1.60e-11 ***
+## SexM             0.07116    0.09345   0.761    0.446    
+## Diameter        10.38078    1.08915   9.531  &lt; 2e-16 ***
+## Height          10.46786    1.60421   6.525 7.82e-11 ***
+## Whole.weight     9.45137    0.82211  11.496  &lt; 2e-16 ***
+## Shucked.weight -20.63667    0.92544 -22.299  &lt; 2e-16 ***
+## Viscera.weight -10.12601    1.45143  -6.977 3.63e-12 ***
+## Shell.weight     8.37357    1.29661   6.458 1.21e-10 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 2.199 on 3332 degrees of freedom
+## Multiple R-squared:  0.5378, Adjusted R-squared:  0.5367 
+## F-statistic: 484.6 on 8 and 3332 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Dari hasil tersebut kita dapat menginterpretasikan sebagai
+berikut:</p>
+<p>Jika dilihat dari variabel prediktor yang digunakan, pada
+model_abalone_backward tidak menggunakan variabel Length. Nilai adjusted
+R-squared pada model tersebut sedikit lebih baik dibandingkan
+model_abalone_all dengan nilai 54.39%. ## Prediction</p>
+<p>Untuk melakukan prediksi sebuah data kita akan menggunakan fungsi
+predict()</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>pred_abalone_all <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">object =</span> model_abalone_all,</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> abalone_test,</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">interval =</span> <span class="st">&#39;prediction&#39;</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">level =</span> <span class="fl">0.95</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pred_abalone_all)</span></code></pre></div>
+<pre><code>##          fit      lwr      upr
+## 1   9.178634 4.863419 13.49385
+## 12  9.409793 5.094541 13.72505
+## 14 10.430987 6.116246 14.74573
+## 15 10.381523 6.064783 14.69826
+## 17  8.234053 3.919309 12.54880
+## 18  9.038411 4.723073 13.35375</code></pre>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>pred_abalone_backward <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">object =</span> model_abalone_backward,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> abalone_test,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">interval =</span> <span class="st">&#39;prediction&#39;</span>,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">level =</span> <span class="fl">0.95</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pred_abalone_backward)</span></code></pre></div>
+<pre><code>##          fit      lwr      upr
+## 1   9.183962 4.869704 13.49822
+## 12  9.417727 5.103836 13.73162
+## 14 10.424051 6.110497 14.73761
+## 15 10.374405 6.058883 14.68993
+## 17  8.240069 3.926372 12.55377
+## 18  9.037718 4.723009 13.35243</code></pre>
+</div>
+<div id="mean-absolute-percentage-error-mape" class="section level2">
+<h2>Mean Absolute Percentage Error (MAPE)</h2>
+<p>MAPE menunjukkan seberapa besar penyimpangannya dalam bentuk
+persentase. Untuk melakukan perhitungan error tersebut kita akan
+menggunakan fungsi MAPE()</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">MAPE</span>(<span class="at">y_pred =</span> pred_abalone_all, <span class="at">y_true =</span> abalone_test<span class="sc">$</span>Rings)</span></code></pre></div>
+<pre><code>## [1] 0.3696868</code></pre>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">MAPE</span>(<span class="at">y_pred =</span> pred_abalone_backward, <span class="at">y_true =</span> abalone_test<span class="sc">$</span>Rings)</span></code></pre></div>
+<pre><code>## [1] 0.3695736</code></pre>
+<p>Dapat dilihat bahwa nilai MAPE dari model_abalone_all dan
+model_abalone_backward tidak berbeda jauh. Nilai MAPE model_abalone_all
+sebesar 38.79%, sedangkan model_abalone_backward memiliki error sebesar
+38.77%. ## Assumption Check</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggcorr</span>(abalone, <span class="at">label=</span> T, <span class="at">label_size =</span> <span class="dv">3</span>, <span class="at">hjust =</span> <span class="dv">1</span>)</span></code></pre></div>
+<pre><code>## Warning in ggcorr(abalone, label = T, label_size = 3, hjust = 1): data in
+## column(s) &#39;Sex&#39; are not numeric and were ignored</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>Dapat disimpulkan dari pembuatan kedua model multiple linear
+regression sebagai berikut:</p>
+<p>-Nilai Adjusted R-squared dari kedua model tersebut tidak berbeda
+jauh dengan nilai 54.38% untuk model_abalone_all sedangkan pada
+model_abalone_backward memiliki nilai 54.39%.</p>
+<p>-Nilai MAPE pada model_abalone_all sebesar 38.79%, sedangkan untuk
+model_abalone_backward sebesar 38.77%.</p>
+<p>-Dari uji asumsi linearity semua variabel prediktor memiliki hubungan
+linear dengan target variabel.</p>
+<p>-Nilai residual/error pada hasil prediksi tidak berdistribusi
+normal.</p>
+<p>-Variansi error dari kedua model menyebar tidak konstan membentuk
+pola (Heteroscedasticity).</p>
+<p>-Terdapat Multikolinearitas pada variabel Whole.weight</p>
+</div>
 </div>
 </div><!-- /.entry-content -->
 </article>

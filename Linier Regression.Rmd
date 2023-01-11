@@ -53,5 +53,113 @@ Menggunakan fungsi head() pada variabel caruntuk melihat apakah file Quikr_car.c
 head(abalone)
 ```
 
-#  referensi
+## Exploratory Data Analysis
+Exploratory Data Analysis
+Data abalone merupakan data hasil observarsi pengukuran fisik dari abalone. Untuk mengetahui jumlah baris dan kolom kita akan menggunakan fungsi dim():
+```{r}
+dim(abalone)
+```
+Data abalone memiliki 4177 baris dan 9 kolom
+Selanjutnya kita akan melakukan pengecekan missing values kita dapat menggunakan kombinasi fungsi colSums() dan is.na()
+```{r}
+colSums(is.na(abalone))
+```
 
+## Cross-Validation
+Kita akan menggunakan fungsi RNGkind() dan set.seed() untuk menghasilkan kombinasi angka random yang akan mengontrol saat dilakukannya splitting data.
+```{r eval=FALSE}
+RNGkind(sample.kind = 'Rounding')
+set.seed(666)
+```
+Selanjutnya kita akan membagi data kita dengan ratio 80:20, fungsi yang digunakan adalah sample() yang akan di assign ke variabel index. Nantinya variabel index akan digunakan untuk subsetting pada data abalone
+```{r}
+index <- sample(nrow(abalone), size = nrow(abalone)*0.8)
+
+abalone_train <- abalone[index,]
+abalone_test <- abalone[-index,]
+```
+## Create model
+```{r}
+model_abalone_all <- lm(Rings ~ ., abalone_train)
+```
+Salah satu metric untuk melihat performa atau evaluasi dari suatu model multiple linear regression menggunakan nilai adj r-squared yang bisa di dapatkan dari hasil fungsi summary().
+```{r}
+summary(model_abalone_all)
+```
+Jika dilihat dari hasil summary() kita dapat melakukan beberapa interpretasi terhadap model tersebut :
+
+Beberapa variabel prediktor memiliki nilai slope positif yang berarti naiknya 1 nilai pada variabel prediktor tersebut akan menambahkan nilai sebesar slope variabel dari target variabel atau Rings. Variabel tersebut adalah SexM, Diameter, Height, Whole.weight dan Shell.weight.
+Begitupun sebaliknya variabel prediktor yang memiliki nilai slope negatif yang berarti naiknya 1 nilai pada variabel tersebut akan mengurangkan nilai sebesar slope variabel dari target variabel atau Rings. Variabel tersebut adalah SexI, Length, Shucked.weight dan Viscera.weight.
+Jika dilihat dari p-value terdapat variabel yang tidak signifikan di model tersebut yaitu SexM dan Length.
+model_abalone_all memiliki nilai adjusted R-squared sebesari 54.38%
+
+## Tuning Model (Stepwise)
+
+fungsi yang digunakan adalah step(). Kita akan menggunakan model_abalone_all sebagai object, dengan parameter direction ‘backward’.
+```{r}
+model_abalone_backward <- step(object = model_abalone_all,
+                             direction = 'backward', 
+                             trace = 0)
+```
+kita dapat melihat hasil model_abalone_backward menggunakan fungsi summary()
+```{r}
+summary(model_abalone_backward)
+```
+Dari hasil tersebut kita dapat menginterpretasikan sebagai berikut:
+
+Jika dilihat dari variabel prediktor yang digunakan, pada model_abalone_backward tidak menggunakan variabel Length.
+Nilai adjusted R-squared pada model tersebut sedikit lebih baik dibandingkan model_abalone_all dengan nilai 54.39%.
+## Prediction
+
+Untuk melakukan prediksi sebuah data kita akan menggunakan fungsi predict()
+```{r}
+pred_abalone_all <- predict(
+  object = model_abalone_all,
+  newdata = abalone_test,
+  interval = 'prediction',
+  level = 0.95
+)
+
+head(pred_abalone_all)
+```
+
+```{r}
+pred_abalone_backward <- predict(
+  object = model_abalone_backward,
+  newdata = abalone_test,
+  interval = 'prediction',
+  level = 0.95
+)
+
+head(pred_abalone_backward)
+```
+## Mean Absolute Percentage Error (MAPE)
+
+MAPE menunjukkan seberapa besar penyimpangannya dalam bentuk persentase. Untuk melakukan perhitungan error tersebut kita akan menggunakan fungsi MAPE()
+```{r}
+MAPE(y_pred = pred_abalone_all, y_true = abalone_test$Rings)
+```
+```{r}
+MAPE(y_pred = pred_abalone_backward, y_true = abalone_test$Rings)
+```
+Dapat dilihat bahwa nilai MAPE dari model_abalone_all dan model_abalone_backward tidak berbeda jauh. Nilai MAPE model_abalone_all sebesar 38.79%, sedangkan model_abalone_backward memiliki error sebesar 38.77%.
+## Assumption Check
+```{r}
+ggcorr(abalone, label= T, label_size = 3, hjust = 1)
+```
+
+## Conclusion
+
+Dapat disimpulkan dari pembuatan kedua model multiple linear regression sebagai berikut:
+
+-Nilai Adjusted R-squared dari kedua model tersebut tidak berbeda jauh dengan nilai 54.38% untuk model_abalone_all sedangkan pada model_abalone_backward memiliki nilai 54.39%.
+
+-Nilai MAPE pada model_abalone_all sebesar 38.79%, sedangkan untuk model_abalone_backward sebesar 38.77%.
+
+-Dari uji asumsi linearity semua variabel prediktor memiliki hubungan linear dengan target variabel.
+
+-Nilai residual/error pada hasil prediksi tidak berdistribusi normal.
+
+-Variansi error dari kedua model menyebar tidak konstan membentuk pola (Heteroscedasticity).
+
+-Terdapat Multikolinearitas pada variabel Whole.weight
